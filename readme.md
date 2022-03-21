@@ -1,7 +1,10 @@
 # emit_esm_server
 
-input: `GET <origin>/github/:owner/:repo/path/to/deno/module.ts`
-output: ESM source code
+Produce ad-hoc ESM given a `deno` GitHub module URL.
+
+**input**: `HTTP GET <origin>/github/:owner/:repo/path/to/deno/module.ts`
+
+**output**: ESM source code
 
 ## warning
 
