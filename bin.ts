@@ -12,7 +12,7 @@ const moduleCache: Map<
 
 const app = new Application();
 app.use(CORS());
-app.use(async (ctx, next) => {
+app.use(async function serveEsm(ctx, next) {
   const [_, rawModulePathname] = ctx.request.url.pathname.split("github/");
   if (!rawModulePathname) {
     return res.fourHundo(ctx, next, "no module github pathname");
