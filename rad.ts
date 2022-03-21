@@ -8,7 +8,7 @@ const check: Task = {
 };
 
 // curl http://localhost:7777/github/denoland/deno_std/blob/main/uuid/mod.ts
-const start: Task = `deno run --unstable -A bin.ts`;
+const start: Task = `deno run --unstable -A src/bin.ts`;
 export const tasks: Tasks = {
   ...{ start, s: start },
   ...{ format, f: format },
