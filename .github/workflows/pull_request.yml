@@ -14,5 +14,7 @@ jobs:
       - uses: denolib/setup-deno@master
         with:
           deno-version: 1.20.1
-      # - name: check
-      #   run: ./rad check
+      - name: install rad
+        run: deno install --unstable -f -A -n rad https://raw.githubusercontent.com/cdaringe/rad/v6.9.1/src/bin.ts
+      - name: check
+        run: rad check
