@@ -39,7 +39,7 @@ app.use(async function serveEsm(ctx, next) {
           throw new Error(`module too big: ${code.length}`);
         }
         const cached = moduleCache.get(filename) || {
-          code: code.replaceAll(/(\.tsx?)('|"|`)/g, "$1.js$2"),
+          code,
           hits: 0,
         };
         ++cached.hits;
@@ -50,6 +50,7 @@ app.use(async function serveEsm(ctx, next) {
     if (src) {
       return res.twoHundoSrcCode(ctx, next, src);
     }
+    console.error(`src missing for ${jsSrcUrl}`);
     return res.fiveHundo(ctx, next, `src missing for ${jsSrcUrl}`);
   } catch (err) {
     console.error(err);

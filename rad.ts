@@ -6,7 +6,11 @@ const check: Task = {
   dependsOn: [format, lint],
   dependsOnSerial: true,
 };
+
+// curl http://localhost:7777/github/denoland/deno_std/blob/main/uuid/mod.ts
+const start: Task = `deno run --unstable -A bin.ts`;
 export const tasks: Tasks = {
+  ...{ start, s: start },
   ...{ format, f: format },
   ...{ lint, l: lint },
   ...{ check, c: check },
