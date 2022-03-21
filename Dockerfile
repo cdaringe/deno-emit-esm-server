@@ -5,6 +5,7 @@ WORKDIR /app
 COPY . .
 # test, hydrate the deno cache, clear excess files
 RUN deno vendor /app/bin.ts
+EXPOSE 7777
 CMD deno run --import-map=/app/vendor/import_map.json --unstable --allow-net /app/bin.ts
 
 
