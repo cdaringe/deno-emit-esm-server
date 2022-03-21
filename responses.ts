@@ -3,7 +3,7 @@ import { Context } from "https://deno.land/x/oak/mod.ts";
 export const fourHundo = async (
   ctx: Context,
   next: () => Promise<unknown>,
-  errorMsg: string
+  errorMsg: string,
 ) => {
   ctx.response.body = { error: errorMsg };
   ctx.response.status = 400;
@@ -14,7 +14,7 @@ export const fourHundo = async (
 export const fiveHundo = async (
   ctx: Context,
   next: () => Promise<unknown>,
-  errorMsg: string
+  errorMsg: string,
 ) => {
   ctx.response.body = { error: errorMsg };
   ctx.response.status = 500;
@@ -25,7 +25,7 @@ export const fiveHundo = async (
 export const twoHundoSrcCode = async (
   ctx: Context,
   next: () => Promise<unknown>,
-  code: string
+  code: string,
 ) => {
   ctx.response.body = code;
   ctx.response.status = 200;
