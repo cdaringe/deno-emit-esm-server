@@ -45,7 +45,6 @@ const createHandler: (opt?: Options) => Middleware = (opt) => {
           : res.fiveHundo(ctx, next, `src missing for ${jsSrcUrl}`);
       });
     } catch (err) {
-      console.error(err);
       const msg = err instanceof Error ? err.message : String(err);
       return res.fourHundo(ctx, next, `failed to emit module: ${msg}`);
     }
