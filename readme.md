@@ -2,6 +2,8 @@
 
 Produce ad-hoc ESM given a `deno` GitHub module URL.
 
+[![main](https://github.com/cdaringe/deno-emit-esm-server/actions/workflows/main.yml/badge.svg)](https://github.com/cdaringe/deno-emit-esm-server/actions/workflows/main.yml)
+
 **input**: `HTTP GET <origin>/github/:owner/:repo/path/to/deno/module.ts`
 
 **output**: ESM source code
