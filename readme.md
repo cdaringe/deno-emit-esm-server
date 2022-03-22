@@ -38,3 +38,12 @@ export class LogRecord {
     loggerName;
 // ...snip snip...
 ```
+
+## todo
+
+- [ ] source rewrite
+  - when imports to foreign TS sources detected
+    - detect if they can be re-written
+    - if they can, do it
+    - if they cant, 400 with meaningful error message. "source importing from XYZ, but unable to convert XZY to JS"... or...
+      - just rewrite the current host, and add a ?src=encodedUrl
