@@ -52,16 +52,15 @@ const createHandler: (opt?: Options) => Middleware = (opt) => {
 };
 
 function cleanupCache(cache: FileSourceCache) {
-  const [keyToPurge] =
-    [...cache.entries()].reduce<[string, CacheEntry] | null>(
-      (lowestHitKey, curr) =>
-        !lowestHitKey
-          ? curr
-          : curr[1].hits < lowestHitKey[1].hits
-          ? curr
-          : lowestHitKey,
-      null
-    ) || [];
+  const [keyToPurge] = [...cache.entries()].reduce<[string, CacheEntry] | null>(
+    (lowestHitKey, curr) =>
+      !lowestHitKey
+        ? curr
+        : curr[1].hits < lowestHitKey[1].hits
+        ? curr
+        : lowestHitKey,
+    null,
+  ) || [];
   if (!keyToPurge) throw new Error(`cache overflow, but no keyToPurge`);
   cache.delete(keyToPurge);
 }
@@ -69,10 +68,13 @@ function cleanupCache(cache: FileSourceCache) {
 async function emitToCache(
   tsSrcUrl: string,
   cache: FileSourceCache,
-  opt?: Options
+  opt?: Options,
 ) {
   const { maxModuleBytes = 500_000, maxModuleCacheSize = 1000 } = opt || {};
-  const resolvedUrl = await fetch(tsSrcUrl).then((res) => res.url);
+  const resolvedUrl = await fetch(tsSrcUrl).then((res) => {
+    res.body?.cancel();
+    return res.url;
+  });
   // optimization - if there's a cache hit on URL resolve... use it
   if (resolvedUrl !== tsSrcUrl && cache.get(`${resolvedUrl}.js`)) {
     return;
@@ -87,7 +89,7 @@ async function emitToCache(
   });
   if (remoteModule.diagnostics.length) {
     throw new Error(
-      `compilation failed. ${remoteModule.diagnostics.join(", ")}`
+      `compilation failed. ${remoteModule.diagnostics.join(", ")}`,
     );
   }
   const compiledEntries = Object.entries(remoteModule.files).filter(([f]) =>
@@ -105,13 +107,15 @@ async function emitToCache(
       hits: 0,
       clearInterval: null,
     };
-    if (typeof toCache.clearInterval === "number")
+    if (typeof toCache.clearInterval === "number") {
       clearTimeout(toCache.clearInterval);
-    if (opt?.cacheEntryTimeout)
+    }
+    if (opt?.cacheEntryTimeout) {
       toCache.clearInterval = setTimeout(
         () => cache.delete(filename),
-        opt!.cacheEntryTimeout!
+        opt!.cacheEntryTimeout!,
       );
+    }
     ++toCache.hits;
     cache.set(filename, toCache);
   }
