@@ -3,6 +3,7 @@ import * as res from "../responses.ts";
 import PQueue from "https://deno.land/x/p_queue@1.0.1/mod.ts";
 import { getProxyUrls } from "./emit/proxy-url.ts";
 type Options = {
+  cacheEntryTimeout?: number;
   maxModuleBytes?: number;
   maxModuleCacheSize?: number;
   maxEmitQueueSize?: number;
@@ -106,10 +107,11 @@ async function emitToCache(
     };
     if (typeof toCache.clearInterval === "number")
       clearTimeout(toCache.clearInterval);
-    toCache.clearInterval = setTimeout(
-      () => cache.delete(filename),
-      1_000 * 60 * 2
-    );
+    if (opt?.cacheEntryTimeout)
+      toCache.clearInterval = setTimeout(
+        () => cache.delete(filename),
+        opt!.cacheEntryTimeout!
+      );
     ++toCache.hits;
     cache.set(filename, toCache);
   }
