@@ -29,6 +29,6 @@ export const twoHundoSrcCode = async (
 ) => {
   ctx.response.body = code;
   ctx.response.status = 200;
-  ctx.response.headers.set("content-type", "application/javascript");
+  ctx.response.headers.set("content-type", "text/javascript");
   await next();
 };

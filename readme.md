@@ -4,7 +4,12 @@ Produce ad-hoc ESM given a `deno` GitHub module URL.
 
 [![main](https://github.com/cdaringe/deno-emit-esm-server/actions/workflows/main.yml/badge.svg)](https://github.com/cdaringe/deno-emit-esm-server/actions/workflows/main.yml)
 
-**input**: `HTTP GET <origin>/github/:owner/:repo/path/to/deno/module.ts`
+**input**:
+
+One of:
+
+- `HTTP GET <origin>/denoland/x/:pkg[@:version]/path/to/mod.ts`
+- `HTTP GET <origin>/github/:owner/:repo/:branch/path/to/mod.ts`
 
 **output**: ESM source code
 
@@ -23,7 +28,7 @@ Non-production ready :)
 
 ```js
 // Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
-import { getLevelByName, getLevelName, LogLevels } from "./levels.ts.js";
+import { getLevelByName, getLevelName, LogLevels } from "./levels.ts";
 export class LogRecord {
     msg;
     #args;

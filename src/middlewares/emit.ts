@@ -1,7 +1,7 @@
 import { Middleware } from "https://deno.land/x/oak/middleware.ts";
 import * as res from "../responses.ts";
 import PQueue from "https://deno.land/x/p_queue@1.0.1/mod.ts";
-
+import { getProxyUrls } from "./emit/proxy-url.ts";
 type Options = {
   maxModuleBytes?: number;
   maxModuleCacheSize?: number;
@@ -11,6 +11,7 @@ type Options = {
 type CacheEntry = {
   code: string;
   hits: number;
+  clearInterval: null | number;
 };
 
 type FileSourceCache = Map<string, CacheEntry>;
@@ -23,12 +24,11 @@ const createHandler: (opt?: Options) => Middleware = (opt) => {
   });
   const cache: FileSourceCache = new Map();
   return async (ctx, next) => {
-    const [_, rawModulePathname] = ctx.request.url.pathname.split("github/");
-    if (!rawModulePathname)
+    const { tsSrcUrl, jsSrcUrl } = getProxyUrls(ctx.request.url) || {};
+    if (!tsSrcUrl || !jsSrcUrl) {
       return res.fourHundo(ctx, next, "no module github pathname");
+    }
     try {
-      const tsSrcUrl = `https://raw.githubusercontent.com/${rawModulePathname}`;
-      const jsSrcUrl = `${tsSrcUrl}.js`;
       const previous = cache.get(jsSrcUrl);
       if (previous) {
         ++previous.hits;
@@ -38,10 +38,9 @@ const createHandler: (opt?: Options) => Middleware = (opt) => {
         return res.fiveHundo(ctx, next, "busy 😵‍💫");
       }
       await queue.add(async function emitOnTurn() {
-        await emitToCache(tsSrcUrl, cache, opt);
-        const src = cache.get(jsSrcUrl)?.code;
-        return src
-          ? res.twoHundoSrcCode(ctx, next, src)
+        const entry = await emitToCache(tsSrcUrl, cache, opt);
+        return entry
+          ? res.twoHundoSrcCode(ctx, next, entry.code)
           : res.fiveHundo(ctx, next, `src missing for ${jsSrcUrl}`);
       });
     } catch (err) {
@@ -72,6 +71,11 @@ async function emitToCache(
   opt?: Options
 ) {
   const { maxModuleBytes = 500_000, maxModuleCacheSize = 1000 } = opt || {};
+  const resolvedUrl = await fetch(tsSrcUrl).then((res) => res.url);
+  // optimization - if there's a cache hit on URL resolve... use it
+  if (resolvedUrl !== tsSrcUrl && cache.get(`${resolvedUrl}.js`)) {
+    return;
+  }
   const remoteModule = await Deno.emit(tsSrcUrl, {
     check: false,
     compilerOptions: {
@@ -98,9 +102,17 @@ async function emitToCache(
     const toCache = cache.get(filename) || {
       code,
       hits: 0,
+      clearInterval: null,
     };
+    if (typeof toCache.clearInterval === "number")
+      clearTimeout(toCache.clearInterval);
+    toCache.clearInterval = setTimeout(
+      () => cache.delete(filename),
+      1_000 * 60 * 2
+    );
     ++toCache.hits;
     cache.set(filename, toCache);
   }
+  return cache.get(`${resolvedUrl}.js`);
 }
 export default createHandler;
