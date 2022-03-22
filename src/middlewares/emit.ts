@@ -76,8 +76,9 @@ async function emitToCache(
     return res.url;
   });
   // optimization - if there's a cache hit on URL resolve... use it
-  if (resolvedUrl !== tsSrcUrl && cache.get(`${resolvedUrl}.js`)) {
-    return;
+  if (resolvedUrl !== tsSrcUrl) {
+    const existing = cache.get(`${resolvedUrl}.js`);
+    if (existing) return existing;
   }
   const remoteModule = await Deno.emit(tsSrcUrl, {
     check: false,
