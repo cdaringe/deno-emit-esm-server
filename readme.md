@@ -1,6 +1,8 @@
 # emit_esm_server
 
-Produce ad-hoc ESM given a `deno` GitHub module URL.
+Produce ad-hoc ECMAScript modules given a `deno` GitHub module URL.
+
+Allows an ESM runtime to import `deno` modules, where deno modules are otherwise not ready to load in the browser immediately.
 
 [![main](https://github.com/cdaringe/deno-emit-esm-server/actions/workflows/main.yml/badge.svg)](https://github.com/cdaringe/deno-emit-esm-server/actions/workflows/main.yml)
 
@@ -15,6 +17,10 @@ When a module includes a URL to an external module (https://foo.org/bar/mod.ts),
 it is rewritten to `<ESM_EMIT_SERVER_ORIGIN>?moduleUrl=<url>`
 
 **output**: ESM source code
+
+## Demo
+
+[Import typescript modules directly into the browser](https://observablehq.com/@cdaringe/import-deno-modules-into-the-browser-with-esm_emit_server)
 
 ## configuration
 
@@ -45,13 +51,3 @@ export class LogRecord {
     loggerName;
 // ...snip snip...
 ```
-
-## todo
-
-- [ ] source rewrite
-  - when imports to foreign TS sources detected
-    - detect if they can be re-written
-    - if they can, do it
-    - if they cant, 400 with meaningful error message. "source importing from
-      XYZ, but unable to convert XZY to JS"... or...
-      - just rewrite the current host, and add a ?src=encodedUrl
