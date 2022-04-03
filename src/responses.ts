@@ -1,4 +1,4 @@
-import { Context } from "https://deno.land/x/oak/mod.ts";
+import { Context } from "oak/mod.ts";
 
 export const fourHundo = async (
   ctx: Context,

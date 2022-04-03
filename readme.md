@@ -11,7 +11,14 @@ One of:
 - `HTTP GET <origin>/denoland/x/:pkg[@:version]/path/to/mod.ts`
 - `HTTP GET <origin>/github/:owner/:repo/:branch/path/to/mod.ts`
 
+When a module includes a URL to an external module (https://foo.org/bar/mod.ts),
+it is rewritten to `<ESM_EMIT_SERVER_ORIGIN>?moduleUrl=<url>`
+
 **output**: ESM source code
+
+## configuration
+
+- `EMIT_SERVER_ORIGIN` - the origin of where your server is hosted. used to rewrite HTTP imports back to your server
 
 ## warning
 
@@ -45,5 +52,6 @@ export class LogRecord {
   - when imports to foreign TS sources detected
     - detect if they can be re-written
     - if they can, do it
-    - if they cant, 400 with meaningful error message. "source importing from XYZ, but unable to convert XZY to JS"... or...
+    - if they cant, 400 with meaningful error message. "source importing from
+      XYZ, but unable to convert XZY to JS"... or...
       - just rewrite the current host, and add a ?src=encodedUrl

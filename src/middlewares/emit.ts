@@ -1,23 +1,26 @@
-import { Middleware } from "https://deno.land/x/oak/middleware.ts";
+import { Middleware } from "oak/middleware.ts";
 import * as res from "../responses.ts";
 import PQueue from "https://deno.land/x/p_queue@1.0.1/mod.ts";
 import { getProxyUrls } from "./emit/proxy-url.ts";
+import { assert } from "testing/asserts.ts";
+import { rewriteImports } from "./emit/rewrite-imports.ts";
 type Options = {
   cacheEntryTimeout?: number;
+  maxEmitQueueSize?: number;
   maxModuleBytes?: number;
   maxModuleCacheSize?: number;
-  maxEmitQueueSize?: number;
+  origin: string;
 };
 
 type CacheEntry = {
+  clearInterval: null | number;
   code: string;
   hits: number;
-  clearInterval: null | number;
 };
 
 type FileSourceCache = Map<string, CacheEntry>;
 
-const createHandler: (opt?: Options) => Middleware = (opt) => {
+const createHandler: (opt: Options) => Middleware = (opt) => {
   // to prevent abuse of githubusercontent, we queue up _all_ users when hitting the emit
   // flow who don't have cache hits
   const queue = new PQueue({
@@ -25,10 +28,14 @@ const createHandler: (opt?: Options) => Middleware = (opt) => {
   });
   const cache: FileSourceCache = new Map();
   return async (ctx, next) => {
-    const { tsSrcUrl, jsSrcUrl } = getProxyUrls(ctx.request.url) || {};
-    if (!tsSrcUrl || !jsSrcUrl) {
+    if (ctx.request.accepts()?.some((v) => v.match(/(text|html)/))) {
+      return next();
+    }
+    const tsSrcUrl = getProxyUrls(ctx.request.url);
+    if (!tsSrcUrl) {
       return res.fourHundo(ctx, next, "no module github pathname");
     }
+    const jsSrcUrl = `${tsSrcUrl}.js`;
     try {
       const previous = cache.get(jsSrcUrl);
       if (previous) {
@@ -52,23 +59,24 @@ const createHandler: (opt?: Options) => Middleware = (opt) => {
 };
 
 function cleanupCache(cache: FileSourceCache) {
-  const [keyToPurge] = [...cache.entries()].reduce<[string, CacheEntry] | null>(
-    (lowestHitKey, curr) =>
-      !lowestHitKey
-        ? curr
-        : curr[1].hits < lowestHitKey[1].hits
-        ? curr
-        : lowestHitKey,
-    null,
-  ) || [];
-  if (!keyToPurge) throw new Error(`cache overflow, but no keyToPurge`);
+  const [keyToPurge] =
+    [...cache.entries()].reduce<[string, CacheEntry] | null>(
+      (lowestHitKey, curr) =>
+        !lowestHitKey
+          ? curr
+          : curr[1].hits < lowestHitKey[1].hits
+          ? curr
+          : lowestHitKey,
+      null
+    ) || [];
+  assert(keyToPurge, `cache overflow, but no keyToPurge`);
   cache.delete(keyToPurge);
 }
 
 async function emitToCache(
   tsSrcUrl: string,
   cache: FileSourceCache,
-  opt?: Options,
+  opt: Options
 ) {
   const { maxModuleBytes = 500_000, maxModuleCacheSize = 1000 } = opt || {};
   const resolvedUrl = await fetch(tsSrcUrl).then(async (res) => {
@@ -88,23 +96,25 @@ async function emitToCache(
       inlineSourceMap: false,
     },
   });
-  if (remoteModule.diagnostics.length) {
-    throw new Error(
-      `compilation failed. ${remoteModule.diagnostics.join(", ")}`,
-    );
-  }
+  assert(
+    !remoteModule.diagnostics.length,
+    `compilation failed. ${remoteModule.diagnostics
+      .map((v) => v.messageText || String(v))
+      .join(", ")}`
+  );
   const compiledEntries = Object.entries(remoteModule.files).filter(([f]) =>
     f.endsWith(".js")
   );
   for (const [filename, code] of compiledEntries) {
-    if (code.length >= maxModuleBytes) {
-      throw new Error(`module too big: ${code.length}`);
-    }
+    assert(code.length < maxModuleBytes, `module too big: ${code.length}`);
     if (cache.size >= maxModuleCacheSize) {
       cleanupCache(cache);
     }
     const toCache = cache.get(filename) || {
-      code,
+      code: rewriteImports(code, {
+        originatingModuleUrl: filename.replace(/\.js/, ""),
+        origin: opt.origin,
+      }),
       hits: 0,
       clearInterval: null,
     };
@@ -114,7 +124,7 @@ async function emitToCache(
     if (opt?.cacheEntryTimeout) {
       toCache.clearInterval = setTimeout(
         () => cache.delete(filename),
-        opt!.cacheEntryTimeout!,
+        opt!.cacheEntryTimeout!
       );
     }
     ++toCache.hits;

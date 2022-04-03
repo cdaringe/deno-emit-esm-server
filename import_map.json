@@ -1,6 +1,9 @@
 {
   "imports": {
     "oak/": "https://deno.land/x/oak@v10.4.0/",
-    "testing/": "https://deno.land/std/testing/"
+    "oak_cors/": "https://deno.land/x/oak_cors@v0.1.0/",
+    "testing/": "https://deno.land/std@0.133.0/testing/",
+    "@babel/": "https://dev.jspm.io/@babel/",
+    "swc/": "https://x.nest.land/swc/"
   }
 }

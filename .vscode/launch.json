@@ -15,6 +15,7 @@
       "request": "launch",
       "name": "Launch Program",
       "type": "pwa-node",
+      // "program": "${file}",
       "program": "${workspaceFolder}/src/bin.ts",
       "cwd": "${workspaceFolder}",
       "runtimeExecutable": "deno",
