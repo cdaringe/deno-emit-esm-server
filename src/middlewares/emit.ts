@@ -59,16 +59,15 @@ const createHandler: (opt: Options) => Middleware = (opt) => {
 };
 
 function cleanupCache(cache: FileSourceCache) {
-  const [keyToPurge] =
-    [...cache.entries()].reduce<[string, CacheEntry] | null>(
-      (lowestHitKey, curr) =>
-        !lowestHitKey
-          ? curr
-          : curr[1].hits < lowestHitKey[1].hits
-          ? curr
-          : lowestHitKey,
-      null
-    ) || [];
+  const [keyToPurge] = [...cache.entries()].reduce<[string, CacheEntry] | null>(
+    (lowestHitKey, curr) =>
+      !lowestHitKey
+        ? curr
+        : curr[1].hits < lowestHitKey[1].hits
+        ? curr
+        : lowestHitKey,
+    null,
+  ) || [];
   assert(keyToPurge, `cache overflow, but no keyToPurge`);
   cache.delete(keyToPurge);
 }
@@ -76,7 +75,7 @@ function cleanupCache(cache: FileSourceCache) {
 async function emitToCache(
   tsSrcUrl: string,
   cache: FileSourceCache,
-  opt: Options
+  opt: Options,
 ) {
   const { maxModuleBytes = 500_000, maxModuleCacheSize = 1000 } = opt || {};
   const resolvedUrl = await fetch(tsSrcUrl).then(async (res) => {
@@ -98,9 +97,11 @@ async function emitToCache(
   });
   assert(
     !remoteModule.diagnostics.length,
-    `compilation failed. ${remoteModule.diagnostics
-      .map((v) => v.messageText || String(v))
-      .join(", ")}`
+    `compilation failed. ${
+      remoteModule.diagnostics
+        .map((v) => v.messageText || String(v))
+        .join(", ")
+    }`,
   );
   const compiledEntries = Object.entries(remoteModule.files).filter(([f]) =>
     f.endsWith(".js")
@@ -124,7 +125,7 @@ async function emitToCache(
     if (opt?.cacheEntryTimeout) {
       toCache.clearInterval = setTimeout(
         () => cache.delete(filename),
-        opt!.cacheEntryTimeout!
+        opt!.cacheEntryTimeout!,
       );
     }
     ++toCache.hits;

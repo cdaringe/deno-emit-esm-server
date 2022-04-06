@@ -9,7 +9,7 @@ const isProduction = DENO_ENV === "production";
 
 assert(
   !isProduction || (isProduction && EMIT_SERVER_ORIGIN),
-  `EMIT_SERVER_ORIGIN required in production mode`
+  `EMIT_SERVER_ORIGIN required in production mode`,
 );
 
 const port = PORT ? parseInt(PORT) : 7777;

@@ -10,21 +10,27 @@ export const rewriteImports = (
   }: {
     originatingModuleUrl: string;
     origin: string;
-  }
-) =>
-  code
+  },
+) => {
+  return code
     .replace(
-      /(from )('|"|`)(\..+)('|"|`)/g,
+      /(from )('|"|`)(\.[^("|'|`)]+)('|"|`)/g,
       function relativeImportToAbsoluteUrl(_, f, q0, relativeUri, q1) {
         const url = new URL(relativeUri, originatingModuleUrl);
-        return `${f}${q0}${url.toString()}${q1}`;
-      }
+        const nextFragment = `${f}${q0}${
+          decodeURIComponent(
+            url.toString(),
+          )
+        }${q1}`;
+        return nextFragment;
+      },
     )
     .replace(
       /(from )('|"|`)(http[^'"]+\.ts)('|"|`)/g,
       function toEmitServerUrl(_, f, q0, uri, q1) {
         const url = new URL(origin);
         url.searchParams.set("moduleUrl", uri);
-        return `${f}${q0}${url.toString()}${q1}`;
-      }
+        return `${f}${q0}${decodeURIComponent(url.toString())}${q1}`;
+      },
     );
+};

@@ -2,7 +2,8 @@
 
 Produce ad-hoc ECMAScript modules given a `deno` GitHub module URL.
 
-Allows an ESM runtime to import `deno` modules, where deno modules are otherwise not ready to load in the browser immediately.
+Allows an ESM runtime to import `deno` modules, where deno modules are otherwise
+not ready to load in the browser immediately.
 
 [![main](https://github.com/cdaringe/deno-emit-esm-server/actions/workflows/main.yml/badge.svg)](https://github.com/cdaringe/deno-emit-esm-server/actions/workflows/main.yml)
 
@@ -24,7 +25,8 @@ it is rewritten to `<ESM_EMIT_SERVER_ORIGIN>?moduleUrl=<url>`
 
 ## configuration
 
-- `EMIT_SERVER_ORIGIN` - the origin of where your server is hosted. used to rewrite HTTP imports back to your server
+- `EMIT_SERVER_ORIGIN` - the origin of where your server is hosted. used to
+  rewrite HTTP imports back to your server
 
 ## warning
 
