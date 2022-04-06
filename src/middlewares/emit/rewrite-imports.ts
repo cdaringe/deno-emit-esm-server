@@ -26,7 +26,7 @@ export const rewriteImports = (
       },
     )
     .replace(
-      /(from )('|"|`)(http[^'"]+\.ts)('|"|`)/g,
+      /(from )('|"|`)(http[^'"]+\.t?j?s)('|"|`)/g,
       function toEmitServerUrl(_, f, q0, uri, q1) {
         const url = new URL(origin);
         url.searchParams.set("moduleUrl", uri);

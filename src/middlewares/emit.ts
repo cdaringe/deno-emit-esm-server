@@ -35,7 +35,9 @@ const createHandler: (opt: Options) => Middleware = (opt) => {
     if (!tsSrcUrl) {
       return res.fourHundo(ctx, next, "no module github pathname");
     }
-    const jsSrcUrl = `${tsSrcUrl}.js`;
+    // confusingly, a ts src url can end w/ .js, due to deno CDNs
+    // serving .d.ts files
+    const jsSrcUrl = tsSrcUrl.endsWith(".js") ? tsSrcUrl : `${tsSrcUrl}.js`;
     try {
       const previous = cache.get(jsSrcUrl);
       if (previous) {

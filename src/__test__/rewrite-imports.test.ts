@@ -25,6 +25,7 @@ Deno.test({
   name: "rewrite imports - double export",
   fn() {
     const input = [
+      'import closestTo from "https://deno.land/x/date_fns@v2.22.1/closestTo/index.js";',
       'export * from "./src/mapbox.ts";',
       'export * from "./src/download.ts";',
       '// export * from "./src/hook.ts";',
@@ -36,10 +37,10 @@ Deno.test({
     assertEquals(
       next.trim(),
       `
+import closestTo from "https://foo.com/?moduleUrl=https://deno.land/x/date_fns@v2.22.1/closestTo/index.js";
 export * from "https://foo.com/?moduleUrl=https://foo.com/src/mapbox.ts";
 export * from "https://foo.com/?moduleUrl=https://foo.com/src/download.ts";
 // export * from "https://foo.com/?moduleUrl=https://foo.com/src/hook.ts";
-
     `.trim(),
     );
   },
