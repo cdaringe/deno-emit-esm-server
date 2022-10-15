@@ -1,9 +1,9 @@
 # emit_esm_server
 
-Produce ad-hoc ECMAScript modules given a `deno` GitHub module URL.
+Serve ECMAScript modules given a `deno` GitHub module URL.
 
-Allows an ESM runtime to import `deno` modules, where deno modules are otherwise
-not ready to load in the browser immediately.
+Allows an ESM runtime (e.g. a browser!) to import `deno` modules, where deno
+modules are otherwise not ready to load in the browser immediately.
 
 [![main](https://github.com/cdaringe/deno-emit-esm-server/actions/workflows/main.yml/badge.svg)](https://github.com/cdaringe/deno-emit-esm-server/actions/workflows/main.yml)
 
@@ -11,8 +11,9 @@ not ready to load in the browser immediately.
 
 One of:
 
-- `HTTP GET <origin>/denoland/x/:pkg[@:version]/path/to/mod.ts`
-- `HTTP GET <origin>/github/:owner/:repo/:branch/path/to/mod.ts`
+- denoland URL: `HTTP GET <origin>/denoland/x/:pkg[@:version]/path/to/mod.ts`
+- github deno URL:
+  `HTTP GET <origin>/github/:owner/:repo/:branch/path/to/mod.ts`
 
 When a module includes a URL to an external module (https://foo.org/bar/mod.ts),
 it is rewritten to `<ESM_EMIT_SERVER_ORIGIN>?moduleUrl=<url>`

@@ -4,6 +4,8 @@ import PQueue from "https://deno.land/x/p_queue@1.0.1/mod.ts";
 import { getProxyUrls } from "./emit/proxy-url.ts";
 import { assert } from "testing/asserts.ts";
 import { rewriteImports } from "./emit/rewrite-imports.ts";
+import { emit } from "emit/mod.ts";
+
 type Options = {
   cacheEntryTimeout?: number;
   maxEmitQueueSize?: number;
@@ -37,9 +39,8 @@ const createHandler: (opt: Options) => Middleware = (opt) => {
     }
     // confusingly, a ts src url can end w/ .js, due to deno CDNs
     // serving .d.ts files
-    const jsSrcUrl = tsSrcUrl.endsWith(".js") ? tsSrcUrl : `${tsSrcUrl}.js`;
     try {
-      const previous = cache.get(jsSrcUrl);
+      const previous = cache.get(tsSrcUrl);
       if (previous) {
         ++previous.hits;
         return res.twoHundoSrcCode(ctx, next, previous.code);
@@ -51,7 +52,7 @@ const createHandler: (opt: Options) => Middleware = (opt) => {
         const entry = await emitToCache(tsSrcUrl, cache, opt);
         return entry
           ? res.twoHundoSrcCode(ctx, next, entry.code)
-          : res.fiveHundo(ctx, next, `src missing for ${jsSrcUrl}`);
+          : res.fiveHundo(ctx, next, `src missing for ${tsSrcUrl}`);
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -86,28 +87,18 @@ async function emitToCache(
   });
   // optimization - if there's a cache hit on URL resolve... use it
   if (resolvedUrl !== tsSrcUrl) {
-    const existing = cache.get(`${resolvedUrl}.js`);
+    const existing = cache.get(resolvedUrl);
     if (existing) return existing;
   }
-  const remoteModule = await Deno.emit(tsSrcUrl, {
-    check: false,
-    compilerOptions: {
-      sourceMap: false,
-      declarationMap: false,
-      inlineSourceMap: false,
-    },
-  });
-  assert(
-    !remoteModule.diagnostics.length,
-    `compilation failed. ${
-      remoteModule.diagnostics
-        .map((v) => v.messageText || String(v))
-        .join(", ")
-    }`,
-  );
-  const compiledEntries = Object.entries(remoteModule.files).filter(([f]) =>
-    f.endsWith(".js")
-  );
+  const uTsSrcUrl = new URL(tsSrcUrl);
+  const remoteModule = await emit(uTsSrcUrl, {});
+  // assert(
+  //   !remoteModule.diagnostics.length,
+  //   `compilation failed. ${remoteModule.diagnostics
+  //     .map((v) => v.messageText || String(v))
+  //     .join(", ")}`
+  // );
+  const compiledEntries = Object.entries(remoteModule);
   for (const [filename, code] of compiledEntries) {
     assert(code.length < maxModuleBytes, `module too big: ${code.length}`);
     if (cache.size >= maxModuleCacheSize) {
@@ -115,7 +106,7 @@ async function emitToCache(
     }
     const toCache = cache.get(filename) || {
       code: rewriteImports(code, {
-        originatingModuleUrl: filename.replace(/\.js/, ""),
+        originatingModuleUrl: filename,
         origin: opt.origin,
       }),
       hits: 0,
@@ -133,6 +124,6 @@ async function emitToCache(
     ++toCache.hits;
     cache.set(filename, toCache);
   }
-  return cache.get(`${resolvedUrl}.js`);
+  return cache.get(resolvedUrl);
 }
 export default createHandler;
